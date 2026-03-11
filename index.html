@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R等级升级计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .quick-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover, .quick-btn.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-bottom: 30px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .language-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .lang-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #999;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .lang-tab.active {
+            color: #667eea;
+        }
+
+        .lang-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+
+        .copy-inline-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+            margin-left: auto;
+        }
+
+        .copy-inline-btn:hover {
+            background: #5568d3;
+        }
+
+        .copy-inline-btn.copied {
+            background: #4caf50;
+        }
+
+        .template-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            line-height: 1.8;
+            font-size: 15px;
+            color: #333;
+            white-space: pre-wrap;
+            min-height: 200px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #e65100;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .lang-content {
+            display: none;
+        }
+
+        .lang-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 R等级升级计算器</h1>
+            <p>快速计算差价并生成多语言话术</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <div class="form-group">
+                    <label>💰 储蓄钱包余额 (RM)</label>
+                    <input type="number" id="balance" placeholder="请输入当前余额" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label>🎯 目标等级金额 (RM)</label>
+                    <input type="number" id="rAmount" placeholder="请选择等级或输入金额" min="0">
+                    <div class="quick-buttons">
+                        <button class="quick-btn" onclick="setAmount(150, 'R1')">R1 / RM150</button>
+                        <button class="quick-btn" onclick="setAmount(450, 'R2')">R2 / RM450</button>
+                        <button class="quick-btn" onclick="setAmount(1350, 'R3')">R3 / RM1350</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="calculate-btn" onclick="calculate()">⚡ 生成话术</button>
+
+            <div class="results-section" id="results">
+                <div class="info-card">
+                    💡 点击语言标签切换话术，点击复制按钮即可复制当前话术
+                </div>
+
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">当前余额</div>
+                        <div class="stat-value" id="statBalance">RM0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">目标等级</div>
+                        <div class="stat-value" id="statTarget">RM0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">需补足</div>
+                        <div class="stat-value" id="statGap">RM0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">手续费(10%)</div>
+                        <div class="stat-value" id="statFee">RM0</div>
+                    </div>
+                </div>
+
+                <div class="language-tabs">
+                    <button class="lang-tab active" onclick="switchLang('zh')">🇨🇳 中文</button>
+                    <button class="lang-tab" onclick="switchLang('en')">🇬🇧 English</button>
+                    <button class="lang-tab" onclick="switchLang('ms')">🇲🇾 Bahasa Melayu</button>
+                    <button class="copy-inline-btn" id="copyBtn" onclick="copyCurrentText()">
+                        <span>📋</span> 复制当前话术
+                    </button>
+                </div>
+
+                <div id="content-zh" class="lang-content active">
+                    <div class="template-box" id="template-zh"></div>
+                </div>
+
+                <div id="content-en" class="lang-content">
+                    <div class="template-box" id="template-en"></div>
+                </div>
+
+                <div id="content-ms" class="lang-content">
+                    <div class="template-box" id="template-ms"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBalance = 0;
+        let currentRAmount = 0;
+        let currentLevel = '';
+        let currentLang = 'zh';
+
+        function setAmount(amount, level) {
+            document.getElementById('rAmount').value = amount;
+            currentLevel = level;
+
+            document.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function calculate() {
+            currentBalance = parseFloat(document.getElementById('balance').value) || 0;
+            currentRAmount = parseFloat(document.getElementById('rAmount').value) || 0;
+
+            if (currentRAmount === 0) {
+                alert('请选择或输入目标等级金额！');
+                return;
+            }
+
+            const gap = Math.max(0, currentRAmount - currentBalance);
+            const fee = (currentBalance * 0.1).toFixed(0);
+
+            document.getElementById('statBalance').textContent = 'RM' + currentBalance;
+            document.getElementById('statTarget').textContent = 'RM' + currentRAmount;
+            document.getElementById('statGap').textContent = 'RM' + gap;
+            document.getElementById('statFee').textContent = 'RM' + fee;
+
+            generateTemplates(currentBalance, currentRAmount, gap, fee);
+
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateTemplates(balance, rAmount, gap, fee) {
+            const levelName = currentLevel || 'R1';
+            const currentLevelName = 'R0';
+
+            // 中文话术
+            const zhTemplate = `【您的储蓄钱包余额：💰RM${balance}】
+现在只需补足 💸RM${gap}，即可立即升级至 ${levelName}！
+
+升级后，您将享有：
+✅ 每日收益
+✅ 解锁正式权限
+（当前 ${currentLevelName} 版本仅支持基础工作，无法获得更多额外收入 😢）
+
+✅ 现在升级最划算！
+👉 仅需补 RM${gap}，即可：获取更高收益，解锁全部权限 🔑节省${fee}（10%）手续费
+
+⚠️【重要提醒：下周规则调整】
+❌ 将无法补差价，须一次性充值 RM${rAmount}
+❌ 储蓄钱包余额 RM${balance} 将自动退回，但提现将收取 10% 手续费（${fee}）😱
+
+限时优惠仅限本周，把握机会，别再错过！`;
+
+            // English
+            const enTemplate = `【Your Savings Wallet Balance: 💰RM${balance}】
+Just top up 💸RM${gap} to upgrade to ${levelName} immediately!
+
+After upgrading, you will enjoy:
+✅ Daily returns
+✅ Unlock official privileges
+(Current ${currentLevelName} version only supports basic work, cannot earn extra income 😢)
+
+✅ Best time to upgrade now!
+👉 Just add RM${gap} to: Get higher returns, unlock all privileges 🔑 Save ${fee} (10%) withdrawal fee
+
+⚠️【Important Reminder: Rule Changes Next Week】
+❌ No more top-up difference option, must recharge full RM${rAmount} at once
+❌ Savings wallet balance RM${balance} will be returned automatically, but withdrawal will charge 10% fee (${fee}) 😱
+
+Limited time offer this week only, seize the opportunity, don't miss out!`;
+
+            // Malay
+            const msTemplate = `【Baki Dompet Simpanan Anda: 💰RM${balance}】
+Hanya perlu tambah 💸RM${gap} untuk menaik taraf ke ${levelName} serta-merta!
+
+Selepas menaik taraf, anda akan menikmati:
+✅ Pulangan harian
+✅ Buka kunci keistimewaan rasmi
+(Versi ${currentLevelName} semasa hanya menyokong kerja asas, tidak boleh dapat pendapatan tambahan 😢)
+
+✅ Masa terbaik untuk menaik taraf sekarang!
+👉 Hanya tambah RM${gap} untuk: Dapat pulangan lebih tinggi, buka kunci semua keistimewaan 🔑 Jimat ${fee} (10%) yuran pengeluaran
+
+⚠️【Peringatan Penting: Perubahan Peraturan Minggu Depan】
+❌ Tiada pilihan tambah nilai kekurangan, mesti cas semula penuh RM${rAmount} sekali gus
+❌ Baki dompet simpanan RM${balance} akan dipulangkan secara automatik, tetapi pengeluaran akan dikenakan yuran 10% (${fee}) 😱
+
+Tawaran masa terhad hanya minggu ini, manfaatkan peluang, jangan lepaskan!`;
+
+            document.getElementById('template-zh').textContent = zhTemplate;
+            document.getElementById('template-en').textContent = enTemplate;
+            document.getElementById('template-ms').textContent = msTemplate;
+        }
+
+        function switchLang(lang) {
+            currentLang = lang;
+
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.lang-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('content-' + lang).classList.add('active');
+        }
+
+        function copyCurrentText() {
+            const text = document.getElementById('template-' + currentLang).textContent;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                const btn = document.getElementById('copyBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span>✅</span> 已复制!';
+                btn.classList.add('copied');
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                alert('复制失败，请手动复制');
+            }
+
+            document.body.removeChild(textarea);
+        }
+
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculate();
+            }
+        });
+    </script>
+</body>
+</html>
