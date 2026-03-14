@@ -336,6 +336,8 @@
     <script>
         const R1_AMOUNT = 150;
         const DAILY_INCOME = 5;
+        const RETURN_BASE = 30; // 基础返还金额
+        const FEE_RATE = 0.10; // 手续费率 10%
         let currentLang = 'zh';
 
         function autoCalculate() {
@@ -345,13 +347,18 @@
             const totalBalance = savings + flexible;
             const gap = Math.max(0, R1_AMOUNT - totalBalance);
 
+            // 计算明天升级的相关数据
+            const newRecharge = R1_AMOUNT; // 明天需要全新充值150
+            const returnAmount = Math.max(0, RETURN_BASE); // 返还金额（固定30）
+            const feeAmount = returnAmount * FEE_RATE; // 手续费 10%
+
             // 更新统计显示
             document.getElementById('statSavings').textContent = 'RM' + savings;
             document.getElementById('statFlexible').textContent = 'RM' + flexible;
             document.getElementById('statGap').textContent = 'RM' + gap;
 
             // 生成话术
-            generateTemplates(savings, flexible, gap);
+            generateTemplates(savings, flexible, gap, returnAmount, feeAmount);
 
             // 显示结果区域
             const resultsSection = document.getElementById('results');
@@ -362,27 +369,65 @@
             }
         }
 
-        function generateTemplates(savings, flexible, gap) {
-            // 中文话术 - 已更新为最后一天提醒
-            const zhTemplate = `你的储蓄钱包目前有${savings}马币，灵活钱包里有${flexible}马币。现在只需再补${gap}马币，就能升级到R1。升级后，你每天可获得${DAILY_INCOME}马币的收入。
+        function generateTemplates(savings, flexible, gap, returnAmount, feeAmount) {
+            const total = savings + flexible;
+            
+            // 中文话术 - 动态计算返还金额和手续费
+            const zhTemplate = `*【RS升级最后提醒】*
+你的储蓄钱包目前有 ${savings} 马币，灵活钱包 ${flexible} 马币。
+🔥 现在只需再补 ${gap} 马币
+（${total} + ${gap} = 150），即可升级至 R1。
+升级后，你每天可获得 ${DAILY_INCOME} 马币 的稳定收入。
+⏳ *今天是补差额的最后一天！*
+从明天开始：
+升级费用统一调整为 RM150
+现金代码 将正式失效
+必须新充值 RM150 才可激活 R1
+充值后 RM${returnAmount} 将返还至灵活钱包
+提取时需支付 10% 手续费（RM${feeAmount.toFixed(2)}）
+⚠️ *今天是特殊期的最后一天*
+错过今天，你将无法再通过补差价升级。
+目前的 R0 等级只是临时调整，并非长久之计。
+如果你想在 RS 赚取更多收入，请把握最后一天的机会！
+👉 要升级到 R1 领取我们的现金代码吗？`;
 
-今天是补差额最后一天。明天起统一升级费用为 RM150，现金代码将失效。
+            // English - 动态计算
+            const enTemplate = `*【RS Upgrade Final Reminder】*
+Your savings wallet currently has RM${savings}, and your flexible wallet has RM${flexible}.
+🔥 You only need to top up RM${gap} more
+(RM${total} + RM${gap} = 150) to upgrade to R1.
+After upgrading, you will earn RM${DAILY_INCOME} stable daily income.
+⏳ *Today is the last day to make up the difference!*
+Starting tomorrow:
+Upgrade fee will be uniformly adjusted to RM150
+Cash code will officially expire
+You must recharge RM150 to activate R1
+RM${returnAmount} will be returned to flexible wallet after recharge
+10% handling fee (RM${feeAmount.toFixed(2)}) applies upon withdrawal
+⚠️ *Today is the last day of the special period*
+Miss today, and you will no longer be able to upgrade by making up the difference.
+The current R0 level is only a temporary adjustment, not a long-term solution.
+If you want to earn more income in RS, please seize the last opportunity!
+👉 Would you like to upgrade to R1 and claim our cash code?`;
 
-今天升级还能额外获得一个现金代码！你想现在就升级到R1吗？`;
-
-            // English - Updated to last day reminder
-            const enTemplate = `Your savings wallet currently has RM${savings}, and your flexible wallet has RM${flexible}. You only need to top up RM${gap} more to upgrade to R1. After upgrading, you will earn RM${DAILY_INCOME} daily income.
-
-Today is the last day to make up the difference. Starting tomorrow, the upgrade fee will be uniformly RM150, and the cash code will expire.
-
-Upgrade today and receive an extra cash code! Would you like to upgrade to R1 now?`;
-
-            // Malay - Updated to last day reminder
-            const msTemplate = `Dompet simpanan anda kini mempunyai RM${savings}, dan dompet fleksibel anda mempunyai RM${flexible}. Anda hanya perlu tambah RM${gap} lagi untuk menaik taraf ke R1. Selepas menaik taraf, anda akan memperoleh pendapatan harian RM${DAILY_INCOME}.
-
-Hari ini adalah hari terakhir untuk menambah kekurangan. Bermula esok, yuran menaik taraf akan seragam RM150, dan kod tunai akan tamat tempoh.
-
-Naik taraf hari ini dan dapatkan kod tunai tambahan! Adakah anda mahu menaik taraf ke R1 sekarang?`;
+            // Malay - 动态计算
+            const msTemplate = `*【Peringatan Akhir Naik Taraf RS】*
+Dompet simpanan anda kini mempunyai RM${savings}, dan dompet fleksibel anda mempunyai RM${flexible}.
+🔥 Anda hanya perlu tambah RM${gap} lagi
+(RM${total} + RM${gap} = 150) untuk menaik taraf ke R1.
+Selepas menaik taraf, anda akan memperoleh pendapatan harian stabil RM${DAILY_INCOME}.
+⏳ *Hari ini adalah hari terakhir untuk menambah kekurangan!*
+Bermula esok:
+Yuran menaik taraf akan diselaraskan kepada RM150
+Kod tunai akan tamat tempoh secara rasmi
+Anda mesti mengecas semula RM150 untuk mengaktifkan R1
+RM${returnAmount} akan dikembalikan ke dompet fleksibel selepas mengecas semula
+Yuran pemprosesan 10% (RM${feeAmount.toFixed(2)}) dikenakan semasa pengeluaran
+⚠️ *Hari ini adalah hari terakhir tempoh khas*
+Lepaskan hari ini, dan anda tidak boleh lagi menaik taraf dengan menambah kekurangan.
+Tahap R0 semasa hanya penyesuaian sementara, bukan penyelesaian jangka panjang.
+Jika anda mahu memperoleh lebih banyak pendapatan dalam RS, sila gunakan peluang terakhir!
+👉 Adakah anda mahu menaik taraf ke R1 dan menuntut kod tunai kami?`;
 
             document.getElementById('template-zh').textContent = zhTemplate;
             document.getElementById('template-en').textContent = enTemplate;
