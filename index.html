@@ -363,24 +363,24 @@
         }
 
         function generateTemplates(savings, flexible, gap) {
-            // 中文话术 - 17号改为周一（3月16号）
+            // 中文话术 - 已更新为最后一天提醒
             const zhTemplate = `你的储蓄钱包目前有${savings}马币，灵活钱包里有${flexible}马币。现在只需再补${gap}马币，就能升级到R1。升级后，你每天可获得${DAILY_INCOME}马币的收入。
 
-只要补足差额，即可立即升级。如果等到周一（3月16号）之后再升级，就需要一次性支付${R1_AMOUNT}马币。
+今天是补差额最后一天。明天起统一升级费用为 RM150，现金代码将失效。
 
 今天升级还能额外获得一个现金代码！你想现在就升级到R1吗？`;
 
-            // English - 改为Monday (March 16)
+            // English - Updated to last day reminder
             const enTemplate = `Your savings wallet currently has RM${savings}, and your flexible wallet has RM${flexible}. You only need to top up RM${gap} more to upgrade to R1. After upgrading, you will earn RM${DAILY_INCOME} daily income.
 
-Upgrade immediately by making up the difference. If you wait until after Monday (March 16) to upgrade, you will need to pay the full amount of RM${R1_AMOUNT} at once.
+Today is the last day to make up the difference. Starting tomorrow, the upgrade fee will be uniformly RM150, and the cash code will expire.
 
 Upgrade today and receive an extra cash code! Would you like to upgrade to R1 now?`;
 
-            // Malay - 改为Isnin (16 Mac)
+            // Malay - Updated to last day reminder
             const msTemplate = `Dompet simpanan anda kini mempunyai RM${savings}, dan dompet fleksibel anda mempunyai RM${flexible}. Anda hanya perlu tambah RM${gap} lagi untuk menaik taraf ke R1. Selepas menaik taraf, anda akan memperoleh pendapatan harian RM${DAILY_INCOME}.
 
-Naik taraf serta-merta dengan menambah kekurangan. Jika anda tunggu sehingga selepas Isnin (16 Mac) untuk menaik taraf, anda perlu membayar jumlah penuh RM${R1_AMOUNT} sekali gus.
+Hari ini adalah hari terakhir untuk menambah kekurangan. Bermula esok, yuran menaik taraf akan seragam RM150, dan kod tunai akan tamat tempoh.
 
 Naik taraf hari ini dan dapatkan kod tunai tambahan! Adakah anda mahu menaik taraf ke R1 sekarang?`;
 
