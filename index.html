@@ -336,7 +336,7 @@
     <script>
         const R1_AMOUNT = 150;
         const DAILY_INCOME = 5;
-        const RETURN_BASE = 30; // 基础返还金额
+        const RETURN_BASE = 50; // 基础返还金额
         const FEE_RATE = 0.10; // 手续费率 10%
         let currentLang = 'zh';
 
@@ -349,7 +349,7 @@
 
             // 计算明天升级的相关数据
             const newRecharge = R1_AMOUNT; // 明天需要全新充值150
-            const returnAmount = Math.max(0, RETURN_BASE); // 返还金额（固定30）
+            const returnAmount = Math.max(0, RETURN_BASE); // 返还金额（固定50）
             const feeAmount = returnAmount * FEE_RATE; // 手续费 10%
 
             // 更新统计显示
