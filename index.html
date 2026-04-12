@@ -2,236 +2,491 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧧 RS 统计表 - 编码修复版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>📊 RS 统计管理系统 | 排行榜自动生成</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-red: #d32f2f;
-            --bg-color: #fce4ec;
-            --r1-color: #e53935;
-            --r2-color: #7b1fa2;
-            --r3-color: #ffa000;
+        * { font-family: 'Inter', system-ui, -apple-system, 'Noto Sans SC', sans-serif; }
+        body {
+            background: linear-gradient(145deg, #e6f7f9 0%, #b2ebf2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Microsoft YaHei", sans-serif; }
-        body { background-color: var(--bg-color); padding: 30px 15px; min-height: 100vh; }
-        
-        .layout-wrapper { max-width: 850px; margin: 0 auto; position: relative; }
-        .container { width: 100%; background: white; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-
-        /* 侧边随动按钮逻辑 */
-        .action-sidebar {
-            position: absolute;
-            left: 100%;
-            top: 0;
-            height: 100%;
-            margin-left: 15px;
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(0, 188, 212, 0.3);
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
         }
-        .sticky-box {
-            position: sticky;
-            top: 50px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        .btn-primary {
+            background: linear-gradient(105deg, #00acc1 0%, #00838f 100%);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,172,193,0.3);
         }
-
-        .float-btn {
-            width: 75px; height: 75px; border-radius: 18px; border: none; cursor: pointer;
-            font-size: 12px; font-weight: bold; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-            color: white; background: #e53935; transition: transform 0.1s;
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 20px -8px #00acc1; }
+        .btn-copy {
+            background: linear-gradient(135deg, #ff8a65 0%, #ff5722 100%);
+            transition: 0.2s;
         }
-        .float-btn:active { transform: scale(0.92); }
-        .float-btn i { font-size: 26px; margin-bottom: 4px; font-style: normal; }
-        .btn-report-float { background: #43a047; }
-
-        h1 { text-align: center; color: var(--primary-red); margin-bottom: 30px; font-size: 32px; letter-spacing: 2px; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .stat-card { text-align: center; padding: 20px; border-radius: 15px; color: white; }
-        .stat-card h4 { font-size: 14px; margin-bottom: 5px; opacity: 0.9; }
-        .stat-card span { font-size: 26px; font-weight: bold; }
-        .r1-bg { background: var(--r1-color); }
-        .r2-bg { background: var(--r2-color); }
-        .r3-bg { background: var(--r3-color); }
-
-        .top-tools { display: flex; gap: 10px; margin-bottom: 20px; justify-content: flex-end; }
-        .btn-tool { padding: 8px 15px; border-radius: 6px; border: 1px solid #ddd; background: #fff; cursor: pointer; font-size: 13px; color: #666; }
-
-        table { width: 100%; border-collapse: collapse; font-size: 16px; }
-        th, td { border-bottom: 1px solid #eee; padding: 18px 12px; text-align: left; }
-        th { background: #fcfcfc; color: #555; }
-        .acc-type { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #f0f0f0; color: #888; margin-left: 8px; font-weight: normal; }
-        .del-btn { color: #d32f2f; cursor: pointer; font-size: 14px; }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; }
-        .modal-content { background: white; width: 90%; max-width: 450px; margin: 80px auto; padding: 30px; border-radius: 15px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 14px; color: #666; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 16px; }
-        
-        #reportArea { white-space: pre-wrap; background: #222; color: #00ff00; padding: 25px; border-radius: 12px; font-family: monospace; display: none; margin-top: 30px; font-size: 14px; }
-        #fileInput { display: none; }
-
-        @media (max-width: 1050px) {
-            .action-sidebar { position: fixed; left: auto; right: 20px; top: auto; bottom: 30px; height: auto; margin-left: 0; }
-            .sticky-box { flex-direction: row; top: auto; }
-            .float-btn { width: 65px; height: 65px; border-radius: 50%; }
+        .btn-copy.copied { background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%); }
+        .stat-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 2rem;
+            border-left: 6px solid #00bcd4;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
         }
+        .preview-box {
+            background: #1e2a32;
+            border-radius: 1.5rem;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .leaderboard-header {
+            background: linear-gradient(90deg, #00acc1, #0097a7);
+        }
+        .smurf-header {
+            background: linear-gradient(90deg, #fb8c00, #ef6c00);
+        }
+        .input-field:focus { border-color: #00bcd4; box-shadow: 0 0 0 3px rgba(0,188,212,0.2); transform: translateY(-1px); }
+        .delete-btn:hover { background: #ef5350; color: white; transform: scale(1.05); }
+        .rank-badge { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 999px; font-weight: 800; }
+        .rank-1 { background: #ffd966; color: #b45309; }
+        .rank-2 { background: #e0e0e0; color: #424242; }
+        .rank-3 { background: #e0bb87; color: #7b3f00; }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .row-enter { animation: fadeSlide 0.2s ease-out; }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #e0f2f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #00acc1; border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-6 relative">
 
-<div class="layout-wrapper">
-    <div class="action-sidebar">
-        <div class="sticky-box">
-            <button class="float-btn" onclick="showModal()"><i>+</i><span>录入数据</span></button>
-            <button class="float-btn btn-report-float" onclick="generateReport()"><i>📊</i><span>复制战报</span></button>
+<div class="max-w-7xl mx-auto relative z-10">
+    <!-- 标题区 -->
+    <div class="text-center mb-8">
+        <div class="inline-block glass-panel rounded-3xl px-8 py-5 shadow-xl">
+            <h1 class="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-cyan-700 via-teal-600 to-cyan-700 bg-clip-text text-transparent">📊 RS 统计管理系统</h1>
+            <div class="flex justify-center gap-4 mt-2 text-cyan-700 font-semibold">
+                <span>🏆 自动合并重复账号</span>
+                <span>🔒 隐私隐藏(留后5位)</span>
+                <span>🌏 三语排行榜</span>
+            </div>
         </div>
     </div>
 
-    <div class="container">
-        <h1>🧧 RS 统计表 🧧</h1>
-        <div class="stats-grid">
-            <div class="stat-card r1-bg"><h4>R1 红红火火</h4><span id="totalR1">0</span></div>
-            <div class="stat-card r2-bg"><h4>R2 紫气东来</h4><span id="totalR2">0</span></div>
-            <div class="stat-card r3-bg"><h4>R3 黄金万两</h4><span id="totalR3">0</span></div>
-        </div>
-        <div class="top-tools">
-            <button class="btn-tool" onclick="exportCSV()">💾 导出备份</button>
-            <button class="btn-tool" onclick="document.getElementById('fileInput').click()">📂 导入 CSV</button>
-            <button class="btn-tool" style="color:#d32f2f" onclick="clearAll()">🗑️ 清空</button>
-        </div>
-        <input type="file" id="fileInput" accept=".csv" onchange="importCSV(event)">
-        <table>
-            <thead><tr><th>账户名称</th><th>R1</th><th>R2</th><th>R3</th><th>操作</th></tr></thead>
-            <tbody id="accountTable"></tbody>
-        </table>
-        <div id="reportArea"></div>
+    <!-- 统计卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div class="stat-card p-5 flex justify-between items-center"><div><div class="text-cyan-700 text-sm font-bold">R1 总量</div><div class="text-4xl font-black text-cyan-800" id="totalR1">0</div></div><span class="text-4xl">🎯</span></div>
+        <div class="stat-card p-5 flex justify-between items-center"><div><div class="text-purple-700 text-sm font-bold">R2 总量</div><div class="text-4xl font-black text-purple-800" id="totalR2">0</div></div><span class="text-4xl">💜</span></div>
+        <div class="stat-card p-5 flex justify-between items-center"><div><div class="text-amber-700 text-sm font-bold">R3 总量</div><div class="text-4xl font-black text-amber-800" id="totalR3">0</div></div><span class="text-4xl">⚜️</span></div>
     </div>
+
+    <!-- 操作栏 -->
+    <div class="glass-panel rounded-2xl p-5 mb-8 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex gap-3 flex-wrap">
+            <button onclick="openAddModal()" class="btn-primary px-6 py-3 rounded-xl font-bold text-white flex items-center gap-2 shadow-md">➕ 添加账户</button>
+            <button onclick="downloadData()" class="bg-green-600 hover:bg-green-700 px-5 py-3 rounded-xl font-bold text-white flex items-center gap-2 shadow">💾 导出CSV</button>
+            <button onclick="clearAll()" class="bg-red-100 hover:bg-red-200 text-red-700 px-5 py-3 rounded-xl font-bold">🗑️ 清空数据</button>
+        </div>
+        <div class="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full"><span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span><span class="text-sm text-cyan-800" id="saveStatus">✅ 自动保存</span></div>
+    </div>
+
+    <!-- 排行榜生成区（新样式） -->
+    <div class="glass-panel rounded-2xl p-6 mb-9 border-t-4 border-cyan-400">
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-5">
+            <div><h2 class="text-2xl font-black text-gray-800 flex items-center gap-2">📋 排行榜文案 · 三语生成</h2><p class="text-xs text-gray-500 mt-1">账户隐私显示：***** + 后五位 (例: *****12345)</p></div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="copyStats('ms')" class="btn-copy px-4 py-2 rounded-xl font-bold text-white flex items-center gap-1"><span>🇲🇾</span> BM</button>
+                <button onclick="copyStats('zh')" class="btn-copy px-4 py-2 rounded-xl font-bold text-white flex items-center gap-1"><span>🇨🇳</span> 中文</button>
+                <button onclick="copyStats('en')" class="btn-copy px-4 py-2 rounded-xl font-bold text-white flex items-center gap-1"><span>🇬🇧</span> EN</button>
+                <button onclick="copyStats('all')" class="bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2 rounded-xl font-bold text-white shadow">🌐 三语全复制</button>
+            </div>
+        </div>
+        <div class="preview-box p-5 text-gray-100 text-sm md:text-base overflow-x-auto shadow-inner">
+            <pre id="previewText" class="whitespace-pre-wrap font-mono">✨ 点击上方按钮生成最新排行榜 ✨</pre>
+        </div>
+    </div>
+
+    <!-- 双栏管理表 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- 正常账户 -->
+        <div class="glass-panel rounded-2xl overflow-hidden shadow-xl">
+            <div class="leaderboard-header px-5 py-4 flex justify-between items-center"><span class="font-bold text-white text-lg flex gap-2">👥 正常账户排行榜</span><span class="bg-white/30 px-3 py-1 rounded-full text-sm" id="normalCount">0</span></div>
+            <div class="overflow-x-auto max-h-[420px] overflow-y-auto"><table class="w-full"><thead class="sticky top-0 bg-cyan-50"><tr class="border-b border-cyan-200"><th class="p-3 text-left w-12">#</th><th class="p-3 text-left">账户名</th><th class="p-3 text-center">R1</th><th class="p-3 text-center">R2</th><th class="p-3 text-center">R3</th><th class="p-3 text-right">总计</th><th class="p-3 text-center">操作</th></tr></thead><tbody id="normalTableBody"></tbody></table><div id="normalEmpty" class="py-12 text-center text-gray-400 hidden">📭 暂无正常账户</div></div>
+        </div>
+        <!-- 小号 -->
+        <div class="glass-panel rounded-2xl overflow-hidden shadow-xl">
+            <div class="smurf-header px-5 py-4 flex justify-between items-center"><span class="font-bold text-white text-lg flex gap-2">🎭 小号排行榜</span><span class="bg-white/30 px-3 py-1 rounded-full text-sm" id="smurfCount">0</span></div>
+            <div class="overflow-x-auto max-h-[420px] overflow-y-auto"><table class="w-full"><thead class="sticky top-0 bg-orange-50"><tr class="border-b border-orange-200"><th class="p-3 text-left w-12">#</th><th class="p-3 text-left">账户名</th><th class="p-3 text-center">R1</th><th class="p-3 text-center">R2</th><th class="p-3 text-center">R3</th><th class="p-3 text-right">总计</th><th class="p-3 text-center">操作</th></tr></thead><tbody id="smurfTableBody"></tbody></table><div id="smurfEmpty" class="py-12 text-center text-gray-400 hidden">🎭 暂无小号数据</div></div>
+        </div>
+    </div>
+    <div class="text-center mt-8 text-cyan-700 text-xs font-medium">✨ 数据自动存储本地 | 重复账号添加时自动累加 R1/R2/R3 ✨</div>
 </div>
 
-<div id="addModal" class="modal">
-    <div class="modal-content">
-        <h3>数据录入/更新</h3>
-        <div class="input-group"><label>账户名</label><input type="text" id="accName" placeholder="请输入完整账户名"></div>
-        <div class="input-group">
-            <label>账户类型</label>
-            <select id="accType"><option value="小号">小号</option><option value="正常">正常</option></select>
+<!-- 添加账户模态框 -->
+<div id="addModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 transition-all">
+    <div class="glass-panel rounded-3xl p-7 w-full max-w-md mx-4 shadow-2xl">
+        <div class="flex gap-3 items-center mb-5"><span class="text-3xl">➕</span><h3 class="text-2xl font-black text-cyan-800">添加 / 累加账户</h3></div>
+        <div class="space-y-5">
+            <div><label class="font-bold text-cyan-700">账户名称 (完整)</label><input type="text" id="newAccountName" placeholder="例: RS_8888" class="input-field w-full p-3 rounded-xl border-2 mt-1"></div>
+            <div><label class="font-bold text-gray-700 block mb-2">账户类型 (仅内部区分)</label><div class="flex gap-4"><label class="flex items-center gap-2 bg-blue-50 p-3 rounded-xl cursor-pointer"><input type="radio" name="typeRadio" value="normal" checked> <span>👤 正常账户</span></label><label class="flex items-center gap-2 bg-orange-50 p-3 rounded-xl cursor-pointer"><input type="radio" name="typeRadio" value="smurf"> <span>🎭 小号</span></label></div></div>
+            <div class="grid grid-cols-3 gap-3"><div><label class="text-cyan-600 text-sm font-bold">R1</label><input type="number" id="newR1" class="input-field w-full p-3 rounded-xl text-center" value="0"></div><div><label class="text-purple-600 text-sm font-bold">R2</label><input type="number" id="newR2" class="input-field w-full p-3 rounded-xl text-center" value="0"></div><div><label class="text-amber-600 text-sm font-bold">R3</label><input type="number" id="newR3" class="input-field w-full p-3 rounded-xl text-center" value="0"></div></div>
         </div>
-        <div class="input-group"><label>R1</label><input type="number" id="r1Val" value="0"></div>
-        <div class="input-group"><label>R2</label><input type="number" id="r2Val" value="0"></div>
-        <div class="input-group"><label>R3</label><input type="number" id="r3Val" value="0"></div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="closeModal()" style="background:#eee; flex:1; padding:12px; border-radius:8px; border:none;">取消</button>
-            <button onclick="addOrUpdateAccount()" style="background:var(--primary-red); color:white; flex:2; padding:12px; border-radius:8px; border:none; font-weight:bold;">提交保存</button>
-        </div>
+        <div class="flex gap-3 mt-7"><button onclick="closeAddModal()" class="flex-1 py-3 bg-gray-200 rounded-xl font-bold">取消</button><button onclick="confirmAddWithMerge()" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">✅ 确认添加/累加</button></div>
     </div>
 </div>
 
 <script>
-    let accounts = JSON.parse(localStorage.getItem('rs_final_v7')) || [];
+    // ---------- 数据核心 ----------
+    let accounts = [];      // 对象结构: { id, account, type, r1, r2, r3 }
+    const STORAGE_KEY = 'rs_management_v7_merge';
 
-    function showModal() { document.getElementById('addModal').style.display = 'block'; }
-    function closeModal() { document.getElementById('addModal').style.display = 'none'; }
-
-    function maskName(name) {
-        const str = String(name);
-        return "******" + (str.length > 5 ? str.slice(-5) : str.padStart(5, '0'));
-    }
-
-    function addOrUpdateAccount() {
-        const name = document.getElementById('accName').value.trim();
-        const type = document.getElementById('accType').value;
-        const r1 = parseInt(document.getElementById('r1Val').value) || 0;
-        const r2 = parseInt(document.getElementById('r2Val').value) || 0;
-        const r3 = parseInt(document.getElementById('r3Val').value) || 0;
-        if (!name) return alert("请输入账户名");
-        const idx = accounts.findIndex(a => a.name === name);
-        if (idx > -1) {
-            accounts[idx].r1 += r1; accounts[idx].r2 += r2; accounts[idx].r3 += r3;
-            accounts[idx].type = type;
-        } else {
-            accounts.push({ name, type, r1, r2, r3, id: Date.now() });
+    // 加载数据
+    function loadData() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(raw) {
+            try {
+                accounts = JSON.parse(raw);
+            } catch(e) { accounts = []; }
         }
-        saveAndRender();
-        closeModal();
+        if(!accounts.length) accounts = [];
+    }
+    function persist() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+        const statusDiv = document.getElementById('saveStatus');
+        if(statusDiv) { statusDiv.innerHTML = '💾 已保存'; setTimeout(() => { if(statusDiv) statusDiv.innerHTML = '✅ 自动保存'; }, 1200); }
     }
 
-    function saveAndRender() {
-        localStorage.setItem('rs_final_v7', JSON.stringify(accounts));
-        const tbody = document.getElementById('accountTable');
-        tbody.innerHTML = '';
-        let t1 = 0, t2 = 0, t3 = 0;
-        accounts.forEach(acc => {
-            t1 += acc.r1; t2 += acc.r2; t3 += acc.r3;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td><strong>${acc.name}</strong><span class="acc-type">${acc.type}</span></td><td>${acc.r1}</td><td>${acc.r2}</td><td>${acc.r3}</td><td><span class="del-btn" onclick="deleteAcc(${acc.id})">删除</span></td>`;
-            tbody.appendChild(tr);
-        });
-        document.getElementById('totalR1').innerText = t1;
-        document.getElementById('totalR2').innerText = t2;
-        document.getElementById('totalR3').innerText = t3;
-    }
-
-    function deleteAcc(id) { if(confirm("确定删除记录？")) { accounts = accounts.filter(a => a.id !== id); saveAndRender(); } }
-    function clearAll() { if(confirm("确定清空数据？")) { accounts = []; saveAndRender(); } }
-
-    // 导出 CSV (强制 UTF-8 BOM)
-    function exportCSV() {
-        if (accounts.length === 0) return alert("暂无数据");
-        let csv = "\uFEFF账户名,类型,R1,R2,R3\n";
-        accounts.forEach(a => { csv += `${a.name},${a.type},${a.r1},${a.r2},${a.r3}\n`; });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "RS_Data.csv";
-        link.click();
-    }
-
-    // 导入 CSV (增强解析)
-    function importCSV(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            const rows = text.split(/\r?\n/).slice(1);
-            rows.forEach(row => {
-                const cols = row.split(",");
-                if (cols.length >= 5) {
-                    const name = cols[0].replace(/^\uFEFF/, '').trim(); // 移除可能存在的BOM头
-                    const type = cols[1].trim();
-                    const r1 = parseInt(cols[2]) || 0;
-                    const r2 = parseInt(cols[3]) || 0;
-                    const r3 = parseInt(cols[4]) || 0;
-                    if (name) {
-                        const idx = accounts.findIndex(a => a.name === name);
-                        if(idx > -1) {
-                            accounts[idx].r1 += r1; accounts[idx].r2 += r2; accounts[idx].r3 += r3;
-                        } else {
-                            accounts.push({ name, type, r1, r2, r3, id: Date.now() + Math.random() });
-                        }
-                    }
-                }
+    // ---------- 合并逻辑: 根据账户名+类型合并累加 (同类型下相同账户名自动累加R1/R2/R3) ----------
+    // 返回值: 是否执行了合并操作 (但不再弹提示框)
+    function addOrMergeAccount(accountName, type, r1Val, r2Val, r3Val) {
+        if(!accountName || accountName.trim() === "") return false;
+        const trimmedName = accountName.trim();
+        const existing = accounts.find(item => item.account === trimmedName && item.type === type);
+        if(existing) {
+            // 累加 (静默合并, 不弹窗)
+            existing.r1 = (parseInt(existing.r1)||0) + (parseInt(r1Val)||0);
+            existing.r2 = (parseInt(existing.r2)||0) + (parseInt(r2Val)||0);
+            existing.r3 = (parseInt(existing.r3)||0) + (parseInt(r3Val)||0);
+            persist();
+            return true; // 合并模式
+        } else {
+            // 新增
+            const newId = Date.now() + Math.floor(Math.random() * 10000);
+            accounts.push({
+                id: newId,
+                account: trimmedName,
+                type: type,
+                r1: parseInt(r1Val)||0,
+                r2: parseInt(r2Val)||0,
+                r3: parseInt(r3Val)||0
             });
-            saveAndRender();
-            alert("导入完成！");
+            persist();
+            return false; // 新增模式
+        }
+    }
+
+    // 获取排序后数据 (按总计)
+    function getSortedData() {
+        return [...accounts].map(acc => ({
+            ...acc,
+            total: (parseInt(acc.r1)||0)+(parseInt(acc.r2)||0)+(parseInt(acc.r3)||0)
+        })).sort((a,b) => b.total - a.total);
+    }
+
+    // 隐私遮蔽：仅显示最后5位，其余全部变成 * (保留后五位字符，前面全部星号)
+    // 例如 "RS_888812345" => "*****12345" (如果长度<=5则直接显示原字符)
+    function maskAccount(name) {
+        if(!name) return "*****";
+        const len = name.length;
+        if(len <= 5) return name;  // 很短就直接显示原名
+        // 保留后五位，前面全部替换为 *
+        const lastFive = name.substring(len - 5);
+        const stars = '*'.repeat(Math.min(len - 5, 8)); // 至少保证前面都是*，长度不限
+        return stars + lastFive;
+    }
+
+    // 渲染两个表格
+    function renderTables() {
+        const sorted = getSortedData();
+        const normals = sorted.filter(i => i.type === 'normal');
+        const smurfs = sorted.filter(i => i.type === 'smurf');
+        document.getElementById('normalCount').innerText = normals.length;
+        document.getElementById('smurfCount').innerText = smurfs.length;
+
+        // 渲染正常表
+        const normalTbody = document.getElementById('normalTableBody');
+        const normalEmpty = document.getElementById('normalEmpty');
+        if(normals.length === 0) {
+            normalTbody.innerHTML = '';
+            normalEmpty.classList.remove('hidden');
+        } else {
+            normalEmpty.classList.add('hidden');
+            normalTbody.innerHTML = normals.map((item, idx) => {
+                const rank = idx+1;
+                let rankHtml = `<span class="rank-badge ${rank===1?'rank-1':rank===2?'rank-2':rank===3?'rank-3':'bg-gray-100 text-gray-700'}">${rank<=3 ? (rank===1?'🥇':rank===2?'🥈':'🥉') : rank}</span>`;
+                return `<tr class="row-enter border-b border-cyan-100 hover:bg-cyan-50/60">
+                    <td class="p-3">${rankHtml}</td>
+                    <td class="p-3 font-semibold text-gray-800 cursor-pointer hover:text-cyan-600" ondblclick="editAccountName(${item.id}, this)">${item.account}</td>
+                    <td class="p-3 text-center"><input type="number" value="${item.r1}" onchange="updateValue(${item.id},'r1',this.value)" class="w-20 text-center border rounded-lg p-1 bg-white/80"></td>
+                    <td class="p-3 text-center"><input type="number" value="${item.r2}" onchange="updateValue(${item.id},'r2',this.value)" class="w-20 text-center border rounded-lg p-1 bg-white/80"></td>
+                    <td class="p-3 text-center"><input type="number" value="${item.r3}" onchange="updateValue(${item.id},'r3',this.value)" class="w-20 text-center border rounded-lg p-1 bg-white/80"></td>
+                    <td class="p-3 text-right font-black text-cyan-700">${item.total}</td>
+                    <td class="p-3 text-center"><button onclick="deleteRow(${item.id})" class="delete-btn p-1.5 rounded-lg">🗑️</button></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // 渲染小号表
+        const smurfTbody = document.getElementById('smurfTableBody');
+        const smurfEmpty = document.getElementById('smurfEmpty');
+        if(smurfs.length === 0) {
+            smurfTbody.innerHTML = '';
+            smurfEmpty.classList.remove('hidden');
+        } else {
+            smurfEmpty.classList.add('hidden');
+            smurfTbody.innerHTML = smurfs.map((item, idx) => {
+                const rank = idx+1;
+                let rankHtml = `<span class="rank-badge ${rank===1?'rank-1':rank===2?'rank-2':rank===3?'rank-3':'bg-gray-100'}">${rank<=3 ? (rank===1?'🥇':rank===2?'🥈':'🥉') : rank}</span>`;
+                return `<tr class="row-enter border-b border-orange-100 hover:bg-orange-50/50">
+                    <td class="p-3">${rankHtml}</td>
+                    <td class="p-3 font-semibold text-gray-800 cursor-pointer hover:text-orange-600" ondblclick="editAccountName(${item.id}, this)">${item.account}</td>
+                    <td class="p-3 text-center"><input type="number" value="${item.r1}" onchange="updateValue(${item.id},'r1',this.value)" class="w-20 text-center border rounded-lg p-1 bg-white/80"></td>
+                    <td class="p-3 text-center"><input type="number" value="${item.r2}" onchange="updateValue(${item.id},'r2',this.value)" class="w-20 text-center border rounded-lg p-1 bg-white/80"></td>
+                    <td class="p-3 text-center"><input type="number" value="${item.r3}" onchange="updateValue(${item.id},'r3',this.value)" class="w-20 text-center border rounded-lg p-1 bg-white/80"></td>
+                    <td class="p-3 text-right font-black text-orange-700">${item.total}</td>
+                    <td class="p-3 text-center"><button onclick="deleteRow(${item.id})" class="delete-btn p-1.5 rounded-lg">🗑️</button></td>
+                </tr>`;
+            }).join('');
+        }
+        updateTotalStats();
+        updatePreviewText();  // 实时刷新预览
+    }
+
+    function updateTotalStats() {
+        const totalR1 = accounts.reduce((s,i)=> s+(parseInt(i.r1)||0),0);
+        const totalR2 = accounts.reduce((s,i)=> s+(parseInt(i.r2)||0),0);
+        const totalR3 = accounts.reduce((s,i)=> s+(parseInt(i.r3)||0),0);
+        document.getElementById('totalR1').innerText = totalR1.toLocaleString();
+        document.getElementById('totalR2').innerText = totalR2.toLocaleString();
+        document.getElementById('totalR3').innerText = totalR3.toLocaleString();
+    }
+
+    function updateValue(id, field, val) {
+        const item = accounts.find(a => a.id === id);
+        if(item) {
+            item[field] = parseInt(val) || 0;
+            persist();
+            renderTables();
+        }
+    }
+    function deleteRow(id) {
+        if(confirm('⚠️ 确定删除此账户吗？')) {
+            accounts = accounts.filter(a => a.id !== id);
+            persist();
+            renderTables();
+        }
+    }
+    function editAccountName(id, element) {
+        const item = accounts.find(a => a.id === id);
+        if(!item) return;
+        const oldName = item.account;
+        const input = document.createElement('input');
+        input.value = oldName;
+        input.className = "border-2 border-cyan-300 rounded-lg p-1 w-full font-bold";
+        element.innerText = '';
+        element.appendChild(input);
+        input.focus();
+        const saveEdit = () => {
+            let newVal = input.value.trim();
+            if(newVal && newVal !== oldName) {
+                // 检查同类型下是否重复 (避免重名冲突)
+                const conflict = accounts.find(a => a.account === newVal && a.type === item.type && a.id !== id);
+                if(conflict) {
+                    alert("❌ 同类型下已有相同账户名！不允许重名，请修改或合并。");
+                    element.innerText = oldName;
+                    return;
+                }
+                item.account = newVal;
+                persist();
+                renderTables();
+            } else if(!newVal) {
+                element.innerText = oldName;
+            } else {
+                element.innerText = oldName;
+            }
         };
-        reader.readAsText(file, "UTF-8"); // 明确指定读取编码
-        event.target.value = '';
+        input.addEventListener('blur', saveEdit);
+        input.addEventListener('keydown', (e) => { if(e.key === 'Enter') { saveEdit(); } });
+    }
+    function clearAll() {
+        if(accounts.length && confirm('⚠️ 彻底清空所有数据？不可恢复。')) { accounts = []; persist(); renderTables(); }
     }
 
-    function generateReport() {
-        if (accounts.length === 0) return alert("暂无数据");
-        const sorted = [...accounts].sort((a,b) => (b.r1+b.r2+b.r3) - (a.r1+a.r2+a.r3));
-        let report = `📊 Laporan Prestasi Terkini\n━━━━━━━━━━━━━━━━━━━━━━\n`;
-        sorted.forEach((acc, i) => {
-            report += `${i+1}. ${maskName(acc.name)}  R1: ${acc.r1} | R2: ${acc.r2} | R3: ${acc.r3}  Jumlah: ${acc.r1+acc.r2+acc.r3}\n`;
+    // ---------- 排行榜文案新格式 (马来语标题等) 且采用新的隐私遮蔽(后五位) ----------
+    function generateLeaderboardText(lang) {
+        const sorted = getSortedData();
+        if(sorted.length === 0) return lang === 'zh' ? "暂无数据，添加账户后生成排行榜" : (lang==='ms'?"Tiada data buat masa ini":"No data available");
+        
+        let header = "";
+        let footer = "";
+        if(lang === 'ms') {
+            header = "📊 Laporan Prestasi Terkini\n━━━━━━━━━━━━━━━━━━━━━━\n";
+            footer = "\n━━━━━━━━━━━━━━━━━━━━━━\nSerahkan usaha kepada masa, serahkan hasil kepada ketekunan...✨\n\n💭 Anda sekarang, sedang berusaha untuk matlamat yang mana?";
+        } else if(lang === 'zh') {
+            header = "📊 最新绩效排行榜\n━━━━━━━━━━━━━━━━━━━━━━\n";
+            footer = "\n━━━━━━━━━━━━━━━━━━━━━━\n把努力交给时间，把结果交给坚持...✨\n\n💭 现在的你，正在为哪个目标而奋斗？";
+        } else { // english
+            header = "📊 Latest Performance Ranking\n━━━━━━━━━━━━━━━━━━━━━━\n";
+            footer = "\n━━━━━━━━━━━━━━━━━━━━━━\nLeave effort to time, leave results to persistence...✨\n\n💭 Which goal are you striving for right now?";
+        }
+        
+        let body = "";
+        sorted.forEach((item, idx) => {
+            // 使用新的隐私规则：显示后五位，其余星号
+            const masked = maskAccount(item.account);
+            const r1v = parseInt(item.r1)||0;
+            const r2v = parseInt(item.r2)||0;
+            const r3v = parseInt(item.r3)||0;
+            const total = r1v+r2v+r3v;
+            if(lang === 'ms') {
+                body += `${idx+1}. ${masked}  R1: ${r1v} | R2: ${r2v} | R3: ${r3v}  Jumlah: ${total}\n`;
+            } else if(lang === 'zh') {
+                body += `${idx+1}. ${masked}  R1: ${r1v} | R2: ${r2v} | R3: ${r3v}  总计: ${total}\n`;
+            } else {
+                body += `${idx+1}. ${masked}  R1: ${r1v} | R2: ${r2v} | R3: ${r3v}  Total: ${total}\n`;
+            }
         });
-        report += `━━━━━━━━━━━━━━━━━━━━━━\nSerahkan usaha kepada masa, serahkan hasil kepada ketekunan...✨\n\n💭 Anda sekarang, sedang berusaha untuk matlamat yang mana?`;
-        navigator.clipboard.writeText(report).then(() => alert("战报已复制！"));
+        return header + body + footer;
     }
 
-    saveAndRender();
+    // 三语全文本
+    function getAllLanguagesText() {
+        return generateLeaderboardText('ms') + "\n\n────────────────────\n\n" + generateLeaderboardText('zh') + "\n\n────────────────────\n\n" + generateLeaderboardText('en');
+    }
+
+    function updatePreviewText() {
+        const sorted = getSortedData();
+        if(sorted.length === 0) {
+            document.getElementById('previewText').innerText = "✨ 暂无数据，点击「添加账户」开始统计 ✨";
+            return;
+        }
+        // 默认预览中文
+        document.getElementById('previewText').innerText = generateLeaderboardText('zh');
+    }
+
+    // 复制功能 + 按钮特效 (无alert干扰)
+    async function copyStats(format) {
+        let text = "";
+        let btnElement = null;
+        if(format === 'all') {
+            text = getAllLanguagesText();
+            btnElement = document.querySelector('button[onclick*="copyStats(\'all\')"]');
+        } else {
+            text = generateLeaderboardText(format);
+            if(format === 'ms') btnElement = document.querySelector('button[onclick*="copyStats(\'ms\')"]');
+            else if(format === 'zh') btnElement = document.querySelector('button[onclick*="copyStats(\'zh\')"]');
+            else if(format === 'en') btnElement = document.querySelector('button[onclick*="copyStats(\'en\')"]');
+        }
+        try {
+            await navigator.clipboard.writeText(text);
+            if(btnElement) {
+                const originalHTML = btnElement.innerHTML;
+                btnElement.classList.add('copied');
+                if(format === 'all') btnElement.innerHTML = '🌐 已复制三语！';
+                else if(format === 'ms') btnElement.innerHTML = '✅ BM已复制';
+                else if(format === 'zh') btnElement.innerHTML = '✅ 中文已复制';
+                else btnElement.innerHTML = '✅ EN Copied!';
+                setTimeout(() => {
+                    btnElement.classList.remove('copied');
+                    btnElement.innerHTML = originalHTML;
+                }, 1600);
+            } else {
+                // 后备
+                alert("文案已复制到剪贴板");
+            }
+        } catch(err) {
+            console.warn("复制失败", err);
+        }
+    }
+
+    // 导出CSV (保留完整账户名)
+    function downloadData() {
+        if(!accounts.length) { alert('无数据可导出'); return; }
+        let csv = "\uFEFF序号,完整账户名,账户类型,R1,R2,R3,合计\n";
+        const sorted = getSortedData();
+        sorted.forEach((it,idx) => {
+            csv += `${idx+1},${it.account},${it.type==='normal'?'正常账户':'小号'},${it.r1},${it.r2},${it.r3},${it.total}\n`;
+        });
+        const totalR1 = accounts.reduce((s,i)=>s+(parseInt(i.r1)||0),0);
+        const totalR2 = accounts.reduce((s,i)=>s+(parseInt(i.r2)||0),0);
+        const totalR3 = accounts.reduce((s,i)=>s+(parseInt(i.r3)||0),0);
+        csv += `\n总计,,,${totalR1},${totalR2},${totalR3},${totalR1+totalR2+totalR3}\n`;
+        const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute("download",`RS_export_${new Date().toISOString().slice(0,19)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
+    // 模态框合并添加逻辑 (彻底去掉所有提示弹窗)
+    function confirmAddWithMerge() {
+        const accountName = document.getElementById('newAccountName').value.trim();
+        if(!accountName) { 
+            // 静默失败，但为了用户体验给一个小提醒（非alert? 但交互需要提示，轻提醒保留最基本必填）
+            alert("请输入账户名称"); 
+            return; 
+        }
+        const type = document.querySelector('input[name="typeRadio"]:checked').value;
+        let r1 = parseInt(document.getElementById('newR1').value) || 0;
+        let r2 = parseInt(document.getElementById('newR2').value) || 0;
+        let r3 = parseInt(document.getElementById('newR3').value) || 0;
+        if(r1<0) r1=0; if(r2<0) r2=0; if(r3<0) r3=0;
+        // 调用合并/新增函数，不做任何弹窗
+        addOrMergeAccount(accountName, type, r1, r2, r3);
+        // 重新渲染
+        renderTables();
+        closeAddModal();
+        // 清空输入框
+        document.getElementById('newAccountName').value = '';
+        document.getElementById('newR1').value = '0';
+        document.getElementById('newR2').value = '0';
+        document.getElementById('newR3').value = '0';
+    }
+
+    function openAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('newAccountName').focus();
+        document.getElementById('newR1').value = '0';
+        document.getElementById('newR2').value = '0';
+        document.getElementById('newR3').value = '0';
+    }
+    function closeAddModal() {
+        const modal = document.getElementById('addModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    // 全局点击外部关闭
+    document.getElementById('addModal')?.addEventListener('click', (e) => { if(e.target === document.getElementById('addModal')) closeAddModal(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeAddModal(); });
+
+    // 初始化
+    loadData();
+    renderTables();
 </script>
 </body>
 </html>
